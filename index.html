@@ -188,7 +188,6 @@
         .single-photo { width: 100%; max-width: 320px; margin: 25px auto; border-radius: 10px; border: 2px solid var(--gold-primary); display: block; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
         .gallery-3 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 25px 0; }
         .gallery-3 img { width: 100%; height: 100%; object-fit: cover; border-radius: 8px; border: 1px solid var(--gold-primary); box-shadow: 0 8px 15px rgba(0,0,0,0.15); }
-        /* Ajuste de foto7.jpg para no forzar el recorte y permitir su altura natural */
         .gallery-3 img:first-child { grid-column: span 2; height: auto; aspect-ratio: auto; max-height: 450px; }
         .gallery-3 img:not(:first-child) { aspect-ratio: 1/1; }
 
@@ -337,13 +336,13 @@
         .rsvp-input-wrap { margin-bottom:22px; }
 
         /* ====== MISC ====== */
-        #glitter-canvas { position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:3;opacity:0;transition:opacity 1s; }
-        #glitter-canvas.visible { opacity:1; }
+        /* Z-index muy alto para que la lluvia y la explosión pasen sobre el sobre */
+        #glitter-canvas { position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999; }
+        
         #music-control-btn { position:fixed;bottom:25px;right:25px;width:55px;height:55px;border-radius:50%; background: linear-gradient(135deg, var(--bugambilia), var(--bugambilia-dark)); border:2px solid var(--gold-primary); color:#fff; display:flex;justify-content:center;align-items:center;cursor:pointer;z-index:999; box-shadow:0 8px 25px rgba(74,13,40,0.5); opacity:0;visibility:hidden; transition:all 0.5s; }
         #music-control-btn:hover { transform:scale(1.1) rotate(5deg); }
         #music-control-btn.visible { opacity:1;visibility:visible; }
         #music-control-btn svg { width:24px;height:24px;fill:#fff; }
-        .flower-petal { position:absolute; border-radius:150% 0 150% 0; pointer-events:none; animation:float-up infinite ease-in; opacity:0; }
         .lotus-header svg { width:60px;height:60px;fill:var(--gold-primary); filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)); }
         .invitation-footer { font-family:'Cinzel',serif;font-size:11px;letter-spacing:5px;color:var(--gold-dark);margin-top:30px;font-weight:700;text-transform:uppercase; text-shadow: 0 1px 1px #fff; }
 
@@ -382,7 +381,7 @@
             <svg width="16" height="16" viewBox="0 0 24 24"><path d="M12 2L13.4 10.6L22 12L13.4 13.4L12 22L10.6 13.4L2 12L10.6 10.6Z" fill="#d4af37"/></svg>
         </div>
 
-        <div class="envelope-wrapper" id="envelopeWrapperNew">
+        <div class="envelope-wrapper" id="envelopeWrapperNew" onclick="openEnvelope(event)">
             <!-- Carta interior -->
             <div class="letter-peek">
                 <div class="letter-peek-inner">
@@ -478,8 +477,6 @@
     </div>
 
     <main id="main-invitation">
-        <div id="lanterns-container" style="position:absolute;top:0;left:0;width:100%;height:100%;overflow:hidden;pointer-events:none;z-index:1;"></div>
-
         <div class="invitation-frame" style="z-index:2;">
             <!-- Destellos Esquinas -->
             <div class="frame-sparkle" style="top:-15px;left:-15px;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M12 2 L13.2 10.8 L22 12 L13.2 13.2 L12 22 L10.8 13.2 L2 12 L10.8 10.8 Z" fill="#d4af37" opacity="0.9"/></svg></div>
@@ -766,6 +763,8 @@
 
     <script>
         let isPlaying = false;
+        let isEnvelopeOpen = false;
+        let fallingInterval;
 
         /* ===== GLITTER MAGICO ===== */
         const canvas = document.getElementById('glitter-canvas');
@@ -776,26 +775,60 @@
         resizeCanvas();
         window.addEventListener('resize',resizeCanvas);
 
-        function makeParticle(x,y,burst){
+        function makeParticle(x, y, type) {
+            let vx, vy, life, size, decay, color;
+            const colors = ['223,0,138', '255,77,184', '255,255,255', '212,175,55'];
+            color = colors[Math.floor(Math.random() * colors.length)];
+            
+            if (type === 'falling') {
+                vx = (Math.random() - 0.5) * 1.5;
+                vy = Math.random() * 2 + 1.5;
+                size = Math.random() * 3.5 + 1.5;
+                life = Math.random() * 0.5 + 0.5;
+                decay = 0.003;
+            } else if (type === 'explosion') {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = Math.random() * 18 + 3;
+                vx = Math.cos(angle) * speed;
+                vy = Math.sin(angle) * speed;
+                size = Math.random() * 4.5 + 2;
+                life = 1;
+                decay = Math.random() * 0.015 + 0.008;
+            } else { // ambient
+                vx = (Math.random() - 0.5) * 0.8;
+                vy = -Math.random() * 1.2 - 0.3;
+                size = Math.random() * 2.5 + 1.2;
+                life = Math.random() * 0.5 + 0.5;
+                decay = 0.005;
+            }
+
             return {
-                x,y,
-                vx:(Math.random()-0.5)*(burst?3.5:0.8),
-                vy:-Math.random()*(burst?3:0.8)-(burst?0.5:0.15),
-                size:Math.random()*(burst?3.5:2.5)+1.2,
-                life:burst?1:Math.random()*0.5+0.5,
-                decay:Math.random()*(burst?0.016:0.007)+0.005,
-                rotation:Math.random()*Math.PI*2,
-                rotSpeed:(Math.random()-0.5)*0.18,
-                color:Math.random()>0.6?'212,175,55':Math.random()>0.5?'223,0,138':'255,255,255'
+                x, y, vx, vy, size, life, decay, color,
+                rotation: Math.random() * Math.PI * 2,
+                rotSpeed: (Math.random() - 0.5) * 0.2
             };
         }
-        function createGlitterBurst(x,y){for(let i=0;i<20;i++)glitterParticles.push(makeParticle(x,y,true));}
-        function spawnAmbient(){
-            if(!document.body.classList.contains('content-active'))return;
-            const x=Math.random()*window.innerWidth;
-            const y=Math.random()*window.innerHeight*0.8+window.scrollY;
-            for(let i=0;i<2;i++)glitterParticles.push(makeParticle(x+(Math.random()-0.5)*80,y+(Math.random()-0.5)*80,false));
+
+        function spawnFalling() {
+            if (isEnvelopeOpen) return;
+            for(let i=0; i<3; i++) {
+                glitterParticles.push(makeParticle(Math.random() * canvas.width, -10, 'falling'));
+            }
         }
+
+        function createExplosion(x, y) {
+            for(let i=0; i<200; i++) {
+                glitterParticles.push(makeParticle(x, y, 'explosion'));
+            }
+        }
+
+        function spawnAmbient() {
+            if (!isEnvelopeOpen) return;
+            const x = Math.random() * window.innerWidth;
+            const y = Math.random() * window.innerHeight * 0.8 + window.scrollY;
+            for(let i=0; i<2; i++) glitterParticles.push(makeParticle(x + (Math.random() - 0.5) * 80, y + (Math.random() - 0.5) * 80, 'ambient'));
+        }
+
         function drawGlitter(){
             ctx.clearRect(0,0,canvas.width,canvas.height);
             glitterParticles=glitterParticles.filter(p=>p.life>0);
@@ -821,8 +854,13 @@
             }
             requestAnimationFrame(drawGlitter);
         }
-        function startGlitter(){canvas.classList.add('visible');drawGlitter();setInterval(spawnAmbient,350);}
-        document.addEventListener('click',e=>{if(document.body.classList.contains('content-active'))createGlitterBurst(e.clientX,e.clientY);});
+
+        // Start falling glitter immediately
+        canvas.classList.add('visible');
+        fallingInterval = setInterval(spawnFalling, 60);
+        drawGlitter();
+
+        document.addEventListener('click',e=>{if(document.body.classList.contains('content-active')) createExplosion(e.clientX,e.clientY + window.scrollY);});
 
         /* ===== SCROLL REVEAL OBSERVER (ANIMACIONES) ===== */
         function initScrollAnimations() {
@@ -839,45 +877,31 @@
         }
 
         /* ===== SOBRE Y APERTURA ===== */
-        (function(){
-            const c = document.getElementById('env-stars');
-            if (!c) return;
-            c.style.cssText = 'position:absolute;inset:0;overflow:hidden;';
-            for (let i = 0; i < 40; i++) {
-                const s = document.createElement('div');
-                s.className = 'env-star';
-                const size = Math.random() * 2 + 1;
-                s.style.cssText = `width:${size}px;height:${size}px;top:${Math.random()*100}%;left:${Math.random()*100}%;--d:${(Math.random()*3+1.5).toFixed(1)}s;--delay:-${(Math.random()*4).toFixed(1)}s;`;
-                c.appendChild(s);
-            }
-        })();
-
-        document.addEventListener('DOMContentLoaded', () => {
-            const wrapper = document.getElementById('envelopeWrapperNew');
-            if (wrapper) {
-                ['click','touchstart'].forEach(ev => {
-                    wrapper.addEventListener(ev, (e) => {
-                        if (e.type === 'click' && 'ontouchstart' in window) return;
-                        openEnvelope();
-                    }, { passive: false });
-                });
-            }
-        });
-
-        function openEnvelope() {
+        function openEnvelope(e) {
             const wrapper = document.getElementById('envelopeWrapperNew');
             const screen = document.getElementById('envelope-screen');
             const audio = document.getElementById('song');
             const musicBtn = document.getElementById('music-control-btn');
             if (!wrapper || wrapper.classList.contains('open')) return;
+            
             wrapper.classList.add('open');
+            isEnvelopeOpen = true;
+            clearInterval(fallingInterval);
+
+            // Explosión en el centro del sobre
+            const rect = wrapper.getBoundingClientRect();
+            const exX = rect.left + rect.width / 2;
+            const exY = rect.top + rect.height / 2;
+            createExplosion(exX, exY);
+
             if (audio) audio.play().then(() => { isPlaying = true; updateMusicIcon(); }).catch(() => {});
+            
             setTimeout(() => {
                 screen.classList.add('fade-out');
                 document.body.classList.add('content-active');
                 if (musicBtn) musicBtn.classList.add('visible');
                 createFlowerPetals();
-                startGlitter();
+                setInterval(spawnAmbient, 350); // Start ambient floating mode
                 setTimeout(initScrollAnimations, 200);
             }, 1400);
         }
