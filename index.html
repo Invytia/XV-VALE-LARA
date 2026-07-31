@@ -345,11 +345,20 @@
         /* Z-index supremo para el glitter */
         #glitter-canvas { position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999; }
         
+        #lanterns-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9998; overflow: hidden; }
+
         #music-control-btn { position:fixed;bottom:25px;right:25px;width:55px;height:55px;border-radius:50%; background: linear-gradient(135deg, var(--bugambilia), var(--bugambilia-dark)); border:2px solid var(--gold-primary); color:#fff; display:flex;justify-content:center;align-items:center;cursor:pointer;z-index:999; box-shadow:0 8px 25px rgba(74,13,40,0.5); opacity:0;visibility:hidden; transition:all 0.5s; }
         #music-control-btn:hover { transform:scale(1.1) rotate(5deg); }
         #music-control-btn.visible { opacity:1;visibility:visible; }
         #music-control-btn svg { width:24px;height:24px;fill:#fff; }
+        
         .flower-petal { position:absolute; border-radius:150% 0 150% 0; pointer-events:none; animation:float-up infinite ease-in; opacity:0; }
+        
+        @keyframes float-up {
+            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(-120vh) rotate(360deg); opacity: 0; }
+        }
+
         .lotus-header svg { width:60px;height:60px;fill:var(--gold-primary); filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)); }
         .invitation-footer { font-family:'Cinzel',serif;font-size:11px;letter-spacing:5px;color:var(--gold-dark);margin-top:30px;font-weight:700;text-transform:uppercase; text-shadow: 0 1px 1px #fff; }
 
@@ -365,6 +374,9 @@
 <body>
     <audio id="song" src="assets/song.mp3" loop preload="auto"></audio>
     <canvas id="glitter-canvas"></canvas>
+    
+    <!-- CONTENEDOR FALTANTE PARA LOS PETALOS AÑADIDO AQUI -->
+    <div id="lanterns-container"></div>
     
     <button id="music-control-btn" onclick="toggleMusic()" aria-label="Control de música">
         <svg id="music-icon" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
@@ -1014,6 +1026,10 @@
         /* ===== PÉTALOS ====== */
         function createFlowerPetals(){
             const c=document.getElementById('lanterns-container');
+            
+            // Validacion añadida para evitar errores
+            if(!c) return; 
+            
             for(let i=0;i<25;i++){
                 const p=document.createElement('div'),w=Math.random()*8+6;
                 p.className='flower-petal';
