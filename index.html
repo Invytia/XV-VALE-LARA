@@ -9,7 +9,7 @@
         :root {
             /* Paleta Premium: Fucsia Vibrante (Vestido) + Dorado */
             --bugambilia-dark: #8a0051;
-            --bugambilia: #df008a; /* Color fucsia vibrante del vestido */
+            --bugambilia: #df008a; /* Fucsia vibrante */
             --bugambilia-light: #ff4db8;
             --bugambilia-glass: rgba(223, 0, 138, 0.15);
             
@@ -30,13 +30,17 @@
         * { box-sizing: border-box; margin: 0; padding: 0; }
         
         body, html {
-            width: 100%; height: 100%;
+            width: 100%; min-height: 100vh;
             font-family: 'Cormorant Garamond', Georgia, serif;
             background-color: var(--vino-dark); 
             color: var(--text-main);
             overflow-x: hidden;
             scroll-behavior: smooth;
         }
+
+        /* Bloquear scroll hasta abrir sobre */
+        body { overflow: hidden; }
+        body.content-active { overflow-y: auto; overflow-x: hidden; }
 
         /* ====== ANIMACIONES DE SCROLL (REVEAL) ====== */
         .reveal { opacity: 0; transform: translateY(40px); transition: all 1s cubic-bezier(0.25, 1, 0.2, 1); will-change: opacity, transform; }
@@ -56,6 +60,7 @@
         #envelope-screen {
             position: fixed; top: 0; left: 0;
             width: 100%; height: 100%;
+            /* Fondo limpio, sin oscurecer */
             background: url('assets/fondosobre.jpg') no-repeat center center;
             background-size: cover;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
@@ -142,15 +147,14 @@
         /* ====== MAIN ====== */
         #main-invitation {
             min-height: 100vh; position: relative; display: flex; flex-direction: column; align-items: center;
-            padding: 50px 15px; opacity: 0; transform: translateY(20px);
-            transition: opacity 1.5s ease-out 0.6s, transform 1.5s ease-out 0.6s;
+            padding: 50px 15px; 
+            /* Se ha removido el opacity 0 inicial para evitar conflictos, ahora todo se anima via .reveal */
         }
         #main-invitation::before {
             content: ''; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background: linear-gradient(rgba(42, 4, 16, 0.75), rgba(42, 4, 16, 0.85)), url('assets/imagen.jpg') no-repeat center center;
             background-size: cover; z-index: -1; will-change: transform;
         }
-        body.content-active #main-invitation { opacity: 1; transform: translateY(0); }
 
         /* ====== FRAME DE CRISTAL ====== */
         .invitation-frame {
@@ -191,7 +195,7 @@
         .gallery-3 img:first-child { grid-column: span 2; height: auto; aspect-ratio: auto; max-height: 450px; }
         .gallery-3 img:not(:first-child) { aspect-ratio: 1/1; }
 
-        /* ====== TIPOGRAFÍA MÁS GRANDE ====== */
+        /* ====== TIPOGRAFÍA ====== */
         .hashtag-text { font-family: 'Bodoni Moda', serif; font-style: italic; font-size: 26px; color: var(--bugambilia); margin: 10px 0 25px 0; letter-spacing: 1px; font-weight: 500; }
         .section-heading { font-family: 'Bodoni Moda', serif; font-style: italic; font-size: 32px; font-weight: 600; letter-spacing: 1px; color: var(--bugambilia); margin-bottom: 22px; line-height: 1.3; }
         .section-heading-sm { font-family: 'Bodoni Moda', serif; font-style: italic; font-size: 26px; font-weight: 500; letter-spacing: 1px; color: var(--bugambilia); margin-bottom: 12px; }
@@ -336,7 +340,7 @@
         .rsvp-input-wrap { margin-bottom:22px; }
 
         /* ====== MISC ====== */
-        /* Z-index muy alto para que la lluvia y la explosión pasen sobre el sobre */
+        /* Z-index en 9999 para que la lluvia de brillos sea perfectamente visible por encima del sobre */
         #glitter-canvas { position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999; }
         
         #music-control-btn { position:fixed;bottom:25px;right:25px;width:55px;height:55px;border-radius:50%; background: linear-gradient(135deg, var(--bugambilia), var(--bugambilia-dark)); border:2px solid var(--gold-primary); color:#fff; display:flex;justify-content:center;align-items:center;cursor:pointer;z-index:999; box-shadow:0 8px 25px rgba(74,13,40,0.5); opacity:0;visibility:hidden; transition:all 0.5s; }
@@ -381,7 +385,7 @@
             <svg width="16" height="16" viewBox="0 0 24 24"><path d="M12 2L13.4 10.6L22 12L13.4 13.4L12 22L10.6 13.4L2 12L10.6 10.6Z" fill="#d4af37"/></svg>
         </div>
 
-        <div class="envelope-wrapper" id="envelopeWrapperNew" onclick="openEnvelope(event)">
+        <div class="envelope-wrapper" id="envelopeWrapperNew">
             <!-- Carta interior -->
             <div class="letter-peek">
                 <div class="letter-peek-inner">
@@ -783,17 +787,17 @@
             if (type === 'falling') {
                 vx = (Math.random() - 0.5) * 1.5;
                 vy = Math.random() * 2 + 1.5;
-                size = Math.random() * 3.5 + 1.5;
+                size = Math.random() * 4 + 1.5;
                 life = Math.random() * 0.5 + 0.5;
                 decay = 0.003;
             } else if (type === 'explosion') {
                 const angle = Math.random() * Math.PI * 2;
-                const speed = Math.random() * 18 + 3;
+                const speed = Math.random() * 25 + 5; 
                 vx = Math.cos(angle) * speed;
                 vy = Math.sin(angle) * speed;
-                size = Math.random() * 4.5 + 2;
+                size = Math.random() * 5 + 2; 
                 life = 1;
-                decay = Math.random() * 0.015 + 0.008;
+                decay = Math.random() * 0.012 + 0.005; 
             } else { // ambient
                 vx = (Math.random() - 0.5) * 0.8;
                 vy = -Math.random() * 1.2 - 0.3;
@@ -811,13 +815,13 @@
 
         function spawnFalling() {
             if (isEnvelopeOpen) return;
-            for(let i=0; i<3; i++) {
-                glitterParticles.push(makeParticle(Math.random() * canvas.width, -10, 'falling'));
+            for(let i=0; i<8; i++) { 
+                glitterParticles.push(makeParticle(Math.random() * canvas.width, -20, 'falling'));
             }
         }
 
         function createExplosion(x, y) {
-            for(let i=0; i<200; i++) {
+            for(let i=0; i<600; i++) { 
                 glitterParticles.push(makeParticle(x, y, 'explosion'));
             }
         }
@@ -855,9 +859,9 @@
             requestAnimationFrame(drawGlitter);
         }
 
-        // Start falling glitter immediately
+        // Inicia el efecto en el sobre inmediatamente
         canvas.classList.add('visible');
-        fallingInterval = setInterval(spawnFalling, 60);
+        fallingInterval = setInterval(spawnFalling, 30);
         drawGlitter();
 
         document.addEventListener('click',e=>{if(document.body.classList.contains('content-active')) createExplosion(e.clientX,e.clientY + window.scrollY);});
@@ -873,25 +877,58 @@
                     }
                 });
             }, { threshold: 0.1, rootMargin: '0px 0px -20px 0px' });
-            elements.forEach(el => observer.observe(el));
+            
+            // Activa inmediatamente lo que ya esté a la vista
+            elements.forEach(el => {
+                const rect = el.getBoundingClientRect();
+                if(rect.top < window.innerHeight) {
+                    setTimeout(() => el.classList.add('active'), Math.random() * 300);
+                } else {
+                    observer.observe(el);
+                }
+            });
         }
 
         /* ===== SOBRE Y APERTURA ===== */
+        document.addEventListener('DOMContentLoaded', () => {
+            const wrapper = document.getElementById('envelopeWrapperNew');
+            if (wrapper) {
+                ['click','touchstart'].forEach(ev => {
+                    wrapper.addEventListener(ev, (e) => {
+                        if (e.type === 'click' && 'ontouchstart' in window) return;
+                        openEnvelope(e);
+                    }, { passive: false });
+                });
+            }
+        });
+
         function openEnvelope(e) {
+            if (isEnvelopeOpen) return;
             const wrapper = document.getElementById('envelopeWrapperNew');
             const screen = document.getElementById('envelope-screen');
             const audio = document.getElementById('song');
             const musicBtn = document.getElementById('music-control-btn');
-            if (!wrapper || wrapper.classList.contains('open')) return;
             
             wrapper.classList.add('open');
             isEnvelopeOpen = true;
             clearInterval(fallingInterval);
 
-            // Explosión en el centro del sobre
-            const rect = wrapper.getBoundingClientRect();
-            const exX = rect.left + rect.width / 2;
-            const exY = rect.top + rect.height / 2;
+            // Explosión de glitter en el punto de apertura
+            let exX = window.innerWidth / 2;
+            let exY = window.innerHeight / 2;
+            if (e) {
+                if (e.touches && e.touches.length > 0) {
+                    exX = e.touches[0].clientX;
+                    exY = e.touches[0].clientY;
+                } else if (e.clientX) {
+                    exX = e.clientX;
+                    exY = e.clientY;
+                } else {
+                    const rect = wrapper.getBoundingClientRect();
+                    exX = rect.left + rect.width / 2;
+                    exY = rect.top + rect.height / 2;
+                }
+            }
             createExplosion(exX, exY);
 
             if (audio) audio.play().then(() => { isPlaying = true; updateMusicIcon(); }).catch(() => {});
@@ -901,8 +938,8 @@
                 document.body.classList.add('content-active');
                 if (musicBtn) musicBtn.classList.add('visible');
                 createFlowerPetals();
-                setInterval(spawnAmbient, 350); // Start ambient floating mode
-                setTimeout(initScrollAnimations, 200);
+                setInterval(spawnAmbient, 350);
+                setTimeout(initScrollAnimations, 100); // Trigger animaciones rápido tras revelar
             }, 1400);
         }
 
